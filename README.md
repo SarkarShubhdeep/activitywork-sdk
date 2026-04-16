@@ -1,92 +1,135 @@
 # activitywork-sdk
 
-Typed HTTP client for **[ActivityWork](https://github.com/SarkarShubhdeep/activitywork-runtime)** public APIs, aimed at **TimeHuddle** (and similar apps) so they never talk to ActivityWatch directly—only to ActivityWork over HTTP.
+Typed HTTP client for **ActivityWork** public APIs (see the packaged [`activitywork-runtime`](https://github.com/SarkarShubhdeep/activitywork-runtime) flow), aimed at **TimeHuddle** (and similar apps) so they never talk to ActivityWatch directly—only to ActivityWork over HTTP.
 
-This repository is **scaffolding (M0)**. The package, types, and CI will land in follow-up milestones.
+## Install
 
----
+```bash
+pnpm add activitywork-sdk
+# or: npm install activitywork-sdk
+```
 
-## Goals
+Requires **Node 18+** (uses `fetch` and `AbortController`).
 
-| Goal | Why |
-|------|-----|
-| **Typed, versioned HTTP client** for ActivityWork’s public APIs | Consumers avoid duplicating URL construction, query params, and JSON parsing. |
-| **Server-first** (Node, serverless, Meteor methods) | No CORS for health checks; secrets stay off the client where needed. |
-| **Stable error model** | Map `ok: false`, HTTP 4xx/5xx, and timeouts to predictable errors. |
-| **Optional browser bundle** | Only if a product needs client-side calls; default is server-side `fetch`. |
+## Quick start (server-first)
 
-**Non-goals for v0:** wrapping ActivityWatch’s raw REST API, or embedding SQLite/catalog logic in the SDK.
+```ts
+import {
+  createActivityWorkClient,
+  getSnapshotUrl,
+} from "activitywork-sdk";
 
----
+const client = createActivityWorkClient({
+  baseUrl: process.env.ACTIVITYWORK_URL ?? "http://localhost:5601",
+  timeoutMs: 12_000,
+  healthTimeoutMs: 3_000,
+  // Optional when ActivityWork is secured:
+  // getToken: () => process.env.ACTIVITYWORK_TOKEN!,
+});
 
-## API surface (contract with ActivityWork)
+const health = await client.checkHealth();
+if (!health.healthy) {
+  console.error(health);
+  return;
+}
+
+const preview = await client.preview({ limit: 50 });
+if (preview.ok) {
+  console.log(preview.eventCount, preview.latestEventAt);
+}
+
+const snap = await client.snapshot({ range: "1h", bucketId: "my-bucket" });
+if (snap.ok) {
+  console.log(snap.summary);
+}
+
+// Open ActivityWork UI with the same query ActivityWork expects:
+const href = getSnapshotUrl(client.baseUrl, { range: "1h" });
+```
+
+### Modular imports
+
+```ts
+import { fetchPreview, buildPreviewUrl } from "activitywork-sdk/preview";
+import { fetchSnapshot, getSnapshotUrl } from "activitywork-sdk/snapshot";
+```
+
+Future tracked-apps parity will live under `activitywork-sdk/apps` (stub today).
+
+## API surface
 
 Configurable **base URL** (default `http://localhost:5601`). Paths are relative to that origin.
 
-| Area | Endpoint | Notes |
-|------|----------|--------|
-| Health / liveness | `GET /api/aw/preview?limit=1` | Short timeout (e.g. 3–5s) for “ActivityWork + ActivityWatch path is healthy.” |
-| Snapshot | `GET /api/aw/snapshot` | Query: `range` (`5m`, `15m`, `30m`, `1h`, `3h`, `1d`), optional `limit`, bucket params as in ActivityWork. |
-| Preview | `GET /api/aw/preview` | Buckets, sample events, `latestEventAt`. |
+| Area | Endpoint | SDK |
+|------|----------|-----|
+| Health / liveness | `GET /api/aw/preview?limit=1` | `client.checkHealth()` (short timeout, default 3s) |
+| Preview | `GET /api/aw/preview` | `client.preview(query?)`, `buildPreviewUrl`, `buildPreviewSearchParams` |
+| Snapshot | `GET /api/aw/snapshot` | `client.snapshot(query)`, `getSnapshotUrl`, `buildSnapshotSearchParams` |
 
-Future: tracked apps / ignore list when routes are finalized—keep the SDK modular (`preview`, `snapshot`, `apps`).
+**Source of truth for JSON shapes:** ActivityWork `app/api/aw/*` routes and `activitywork/lib/*`. When those change, bump this package’s semver and update [CHANGELOG.md](CHANGELOG.md).
 
----
+## Buckets and defaults
 
-## Planned layout
+Cross-origin **`localStorage`** on the ActivityWork origin is **not** available to TimeHuddle. Omitting bucket params relies on ActivityWork defaults. For deterministic behavior, pass explicit **`bucketId`** (and **`watcherCategory`** when supported). See [docs/buckets-and-defaults.md](docs/buckets-and-defaults.md).
+
+## Errors
+
+Thrown errors are subclasses of `ActivityWorkSDKError`:
+
+- `ActivityWorkHttpError` — non-2xx HTTP
+- `ActivityWorkParseError` — invalid JSON
+- `ActivityWorkTimeoutError` — timeout / abort
+
+JSON bodies with `{ ok: false, error }` are **returned** from `preview` / `snapshot` (not thrown) so you can narrow with `isActivityWorkOk`.
+
+## Layout
 
 ```
 activitywork-sdk/
   packages/
-    activitywork-sdk/     # npm package (scope TBD, e.g. @scope/activitywork-sdk)
+    activitywork-sdk/     # npm package: activitywork-sdk
       src/
         client.ts
         endpoints/
           preview.ts
           snapshot.ts
+          apps.ts          # stub for future routes
         types/
           preview.ts
           snapshot.ts
           common.ts
         errors.ts
         index.ts
-      package.json
-      tsconfig.json
-  README.md
-  LICENSE
+  docs/
+    activitywork-sdk-timehuddle-plan.md
+    buckets-and-defaults.md
 ```
 
-**Tooling (planned):** TypeScript, `tsup` or `unbuild` for ESM (+ optional CJS), strict ESLint + `tsc`, CI on push. Versioning starts at **0.x** until response shapes are frozen; breaking changes in **CHANGELOG**.
+## Tooling
 
----
+TypeScript (strict), **tsup** (ESM + CJS + types), **Vitest**, **ESLint** (typescript-eslint). From repo root: `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
 
 ## Milestones
 
-| Phase | Deliverable |
-|-------|-------------|
-| **M0** | Empty repo, README, CI, published package (GitHub Packages or npm). ← *you are here* |
-| **M1** | `preview` + `checkHealth` + types; one server path in TimeHuddle. |
-| **M2** | `snapshot` + URL builder + full types. |
-| **M3** | Bucket / watcher docs and optional helpers for multi-watcher setups. |
-| **M4** | Additional endpoints (apps/catalog) if needed. |
+| Phase | Deliverable | Status |
+|-------|-------------|--------|
+| **M0** | Workspace, CI, publishable package | Done |
+| **M1** | Preview + `checkHealth` + types + errors + tests | Done |
+| **M2** | Snapshot + `getSnapshotUrl` + types + tests | Done |
+| **M3** | Bucket / watcher docs + query helpers | Done |
+| **M4** | Apps / tracked-apps subpath stub | Done |
 
----
+## Planning and coordination
 
-## Coordination
-
-- **Source of truth for HTTP JSON:** ActivityWork route handlers under `activitywork/app/api/aw/` and libs under `activitywork/lib/`.
-- **Planning doc** (handoff, naming, open questions): `docs/activitywork-sdk-timehuddle-plan.md` in the **ActivityWork** repository. If you keep this SDK folder next to that repo on disk, the file sits one level up under `docs/`.
-
----
+- Handoff and naming: [docs/activitywork-sdk-timehuddle-plan.md](docs/activitywork-sdk-timehuddle-plan.md)
+- Consider linking this repo from ActivityWork’s README as the HTTP contract consumer.
 
 ## Open questions
 
-1. Package **name and scope** (`@mie/activitywork-sdk`, `@timehuddle/activitywork-sdk`, etc.).
-2. **Browser vs server** — if browser-heavy, ship a browser-safe build and document CORS for the TimeHuddle origin.
-3. **Auth** — routes are unauthenticated on typical LAN setups; production tokens would need `headers` / `getToken()` hooks in the client.
-
----
+1. **Scoped package** (`@org/activitywork-sdk`) vs current unscoped `activitywork-sdk` — adjust `name` / `publishConfig` before publish.
+2. **Browser usage** — if you call ActivityWork from the browser, configure CORS on ActivityWork for the TimeHuddle origin.
+3. **Auth** — use `getToken` / `defaultHeaders` on the client when deployments require credentials.
 
 ## License
 
-*To be added* (match ActivityWork or your org’s default).
+MIT — see [LICENSE](LICENSE).

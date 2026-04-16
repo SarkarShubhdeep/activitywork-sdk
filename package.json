@@ -1,0 +1,11 @@
+{
+  "name": "activitywork-sdk-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "pnpm --filter activitywork-sdk build",
+    "lint": "pnpm --filter activitywork-sdk lint",
+    "typecheck": "pnpm --filter activitywork-sdk typecheck",
+    "test": "pnpm --filter activitywork-sdk test"
+  }
+}
