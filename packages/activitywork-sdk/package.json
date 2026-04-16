@@ -1,5 +1,5 @@
 {
-  "name": "activitywork-sdk",
+  "name": "@sarkarshubh/activitywork-sdk",
   "version": "0.1.0",
   "description": "Typed HTTP client for ActivityWork public APIs (TimeHuddle / server-first)",
   "license": "MIT",

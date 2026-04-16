@@ -3,9 +3,10 @@
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "build": "pnpm --filter activitywork-sdk build",
-    "lint": "pnpm --filter activitywork-sdk lint",
-    "typecheck": "pnpm --filter activitywork-sdk typecheck",
-    "test": "pnpm --filter activitywork-sdk test"
+    "clean": "rm -rf packages/activitywork-sdk/dist",
+    "build": "pnpm --filter ./packages/activitywork-sdk build",
+    "lint": "pnpm --filter ./packages/activitywork-sdk lint",
+    "typecheck": "pnpm --filter ./packages/activitywork-sdk typecheck",
+    "test": "pnpm --filter ./packages/activitywork-sdk test"
   }
 }

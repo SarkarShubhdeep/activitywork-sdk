@@ -5,8 +5,8 @@ Typed HTTP client for **ActivityWork** public APIs (see the packaged [`activityw
 ## Install
 
 ```bash
-pnpm add activitywork-sdk
-# or: npm install activitywork-sdk
+pnpm add @sarkarshubh/activitywork-sdk
+# or: npm install @sarkarshubh/activitywork-sdk
 ```
 
 Requires **Node 18+** (uses `fetch` and `AbortController`).
@@ -17,7 +17,7 @@ Requires **Node 18+** (uses `fetch` and `AbortController`).
 import {
   createActivityWorkClient,
   getSnapshotUrl,
-} from "activitywork-sdk";
+} from "@sarkarshubh/activitywork-sdk";
 
 const client = createActivityWorkClient({
   baseUrl: process.env.ACTIVITYWORK_URL ?? "http://localhost:5601",
@@ -50,11 +50,11 @@ const href = getSnapshotUrl(client.baseUrl, { range: "1h" });
 ### Modular imports
 
 ```ts
-import { fetchPreview, buildPreviewUrl } from "activitywork-sdk/preview";
-import { fetchSnapshot, getSnapshotUrl } from "activitywork-sdk/snapshot";
+import { fetchPreview, buildPreviewUrl } from "@sarkarshubh/activitywork-sdk/preview";
+import { fetchSnapshot, getSnapshotUrl } from "@sarkarshubh/activitywork-sdk/snapshot";
 ```
 
-Future tracked-apps parity will live under `activitywork-sdk/apps` (stub today).
+Future tracked-apps parity will live under `@sarkarshubh/activitywork-sdk/apps` (stub today).
 
 ## API surface
 
@@ -87,7 +87,7 @@ JSON bodies with `{ ok: false, error }` are **returned** from `preview` / `snaps
 ```
 activitywork-sdk/
   packages/
-    activitywork-sdk/     # npm package: activitywork-sdk
+    activitywork-sdk/     # npm package: @sarkarshubh/activitywork-sdk
       src/
         client.ts
         endpoints/
@@ -103,11 +103,16 @@ activitywork-sdk/
   docs/
     activitywork-sdk-timehuddle-plan.md
     buckets-and-defaults.md
+    npm-beta-publish-checklist.md
 ```
 
 ## Tooling
 
-TypeScript (strict), **tsup** (ESM + CJS + types), **Vitest**, **ESLint** (typescript-eslint). From repo root: `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
+TypeScript (strict), **tsup** (ESM + CJS + types), **Vitest**, **ESLint** (typescript-eslint). From repo root: `pnpm install`, `pnpm clean` (removes `packages/activitywork-sdk/dist`), `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
+
+## Publishing (first beta)
+
+Step-by-step checklist before the first npm beta: [docs/npm-beta-publish-checklist.md](docs/npm-beta-publish-checklist.md).
 
 ## Milestones
 
@@ -126,7 +131,7 @@ TypeScript (strict), **tsup** (ESM + CJS + types), **Vitest**, **ESLint** (types
 
 ## Open questions
 
-1. **Scoped package** (`@org/activitywork-sdk`) vs current unscoped `activitywork-sdk` — adjust `name` / `publishConfig` before publish.
+1. **Public package name** — published as **`@sarkarshubh/activitywork-sdk`**. To shorten (e.g. `@sarkarshubh/activitywork`), change `name` in `packages/activitywork-sdk/package.json` and README install lines before publish.
 2. **Browser usage** — if you call ActivityWork from the browser, configure CORS on ActivityWork for the TimeHuddle origin.
 3. **Auth** — use `getToken` / `defaultHeaders` on the client when deployments require credentials.
 

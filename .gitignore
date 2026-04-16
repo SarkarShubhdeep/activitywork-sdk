@@ -5,3 +5,10 @@ coverage/
 *.log
 .env
 .env.*
+
+# npm pack / publish dry runs
+*.tgz
+
+# Tooling caches
+*.tsbuildinfo
+.eslintcache

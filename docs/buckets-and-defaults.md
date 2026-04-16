@@ -5,6 +5,6 @@ TimeHuddle (and other apps) call ActivityWork **from their own origin**. Activit
 **Practical guidance**
 
 - For **deterministic** behavior from TimeHuddle, pass explicit **`bucketId`** (and **`watcherCategory`** when your ActivityWork version supports it) using values you obtained earlier from `preview()` (e.g. listed buckets).
-- Use **`buildPreviewSearchParams`** / **`buildSnapshotSearchParams`** from `activitywork-sdk` to keep query names aligned with ActivityWork.
+- Use **`buildPreviewSearchParams`** / **`buildSnapshotSearchParams`** from `@sarkarshubh/activitywork-sdk` to keep query names aligned with ActivityWork.
 
 When ActivityWork changes query semantics, bump the SDK semver and update the changelog.

@@ -11,4 +11,4 @@ while in **0.x** (breaking changes may appear in minors until the API is frozen)
 ### Added
 
 - `ActivityWorkClient` with `preview`, `checkHealth`, and `snapshot`.
-- Preview and snapshot URL/query helpers, stable error types, and modular subpath exports (`activitywork-sdk/preview`, `activitywork-sdk/snapshot`, `activitywork-sdk/apps` stub).
+- Preview and snapshot URL/query helpers, stable error types, and modular subpath exports (`@sarkarshubh/activitywork-sdk/preview`, `@sarkarshubh/activitywork-sdk/snapshot`, `@sarkarshubh/activitywork-sdk/apps` stub).
